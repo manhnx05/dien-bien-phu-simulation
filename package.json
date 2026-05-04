@@ -1,0 +1,22 @@
+{
+  "name": "dien-bien-phu-1954",
+  "version": "2.0.0",
+  "description": "Interactive 3D map of Dien Bien Phu Campaign 1954 with audio and narration",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve -l 8000",
+    "dev": "npx serve -l 8000"
+  },
+  "keywords": [
+    "dien-bien-phu",
+    "vietnam-history",
+    "3d-visualization",
+    "web-audio",
+    "canvas",
+    "interactive-map"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}
