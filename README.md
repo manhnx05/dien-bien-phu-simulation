@@ -481,8 +481,8 @@ Created with ❤️ for educational purposes.
 ## 📞 Support
 
 - 📧 Email: your-email@example.com
-- 🐛 Issues: [GitHub Issues](https://github.com/your-repo/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/your-repo/discussions)
+- 🐛 Issues: [GitHub Issues](https://github.com/manhnx05/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/manhnx05/dien-bien-phu-simulation.git/discussions)
 
 ## ⭐ Star History
 
