@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chiến dịch Điện Biên Phủ 1954 – 3D + Âm thanh</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1b2a;font-family:'Segoe UI',Arial,sans-serif;overflow:hidden;width:100vw;height:100vh;cursor:grab}
+body:active{cursor:grabbing}
+#canvas{display:block;width:100%;height:100%}
+#ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+
+#title-bar{position:absolute;top:10px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;white-space:nowrap}
+#title-bar h1{font-size:17px;font-weight:700;color:#fef3c7;text-shadow:0 0 12px rgba(255,200,50,0.7);letter-spacing:1px}
+#title-bar p{font-size:10px;color:#64748b;margin-top:2px}
+
+#phase-panel{position:absolute;top:12px;left:12px;pointer-events:all}
+.phase-btn{display:block;margin-bottom:5px;padding:7px 12px;font-size:11px;font-weight:600;border:1px solid rgba(255,255,255,0.15);border-radius:6px;cursor:pointer;transition:all .2s;width:195px;text-align:left;background:rgba(10,25,50,0.88);color:#94a3b8}
+.phase-btn span{font-size:9px;opacity:0.75;display:block;font-weight:400;margin-top:1px}
+.phase-btn.p0.active,.phase-btn.p0:hover{background:rgba(30,60,120,0.92);color:#93c5fd;border-color:#3b82f6;box-shadow:0 0 10px rgba(59,130,246,0.3)}
+.phase-btn.p1.active,.phase-btn.p1:hover{background:rgba(90,20,20,0.92);color:#fca5a5;border-color:#ef4444;box-shadow:0 0 10px rgba(239,68,68,0.35)}
+.phase-btn.p2.active,.phase-btn.p2:hover{background:rgba(90,45,10,0.92);color:#fdba74;border-color:#f97316;box-shadow:0 0 10px rgba(249,115,22,0.35)}
+.phase-btn.p3.active,.phase-btn.p3:hover{background:rgba(100,10,10,0.95);color:#fca5a5;border-color:#dc2626;box-shadow:0 0 12px rgba(220,38,38,0.5)}
+
+/* SOUND PANEL */
+#sound-panel{position:absolute;top:12px;right:105px;pointer-events:all;display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.sbtn{padding:5px 10px;font-size:11px;border:1px solid rgba(255,255,255,0.15);border-radius:5px;background:rgba(10,25,50,0.88);color:#94a3b8;cursor:pointer;transition:all .2s;white-space:nowrap}
+.sbtn:hover{background:rgba(30,60,100,0.95);color:#e2e8f0}
+.sbtn.active{background:rgba(30,70,30,0.95);color:#86efac;border-color:#22c55e}
+.sbtn.narr-active{background:rgba(80,30,10,0.95);color:#fdba74;border-color:#f97316}
+#vol-wrap{display:flex;align-items:center;gap:5px;font-size:10px;color:#64748b}
+#vol-wrap input{width:70px;accent-color:#3b82f6}
+
+/* NARRATOR BOX */
+#narrator{position:absolute;bottom:55px;left:50%;transform:translateX(-50%);max-width:680px;width:90%;background:rgba(5,12,28,0.92);border:1px solid rgba(251,191,36,0.35);border-radius:10px;padding:12px 16px;pointer-events:none;display:none}
+#narrator-phase{font-size:10px;color:#f59e0b;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+#narrator-text{font-size:13px;color:#e2e8f0;line-height:1.65;font-style:italic}
+#narrator-text .highlight{color:#fde68a;font-weight:600;font-style:normal}
+#narrator-progress{height:2px;background:rgba(255,255,255,0.1);border-radius:1px;margin-top:8px}
+#narrator-bar{height:2px;background:#f59e0b;border-radius:1px;width:0%;transition:width 0.5s linear}
+
+#legend{position:absolute;bottom:12px;left:12px;background:rgba(5,15,30,0.88);border:1px solid rgba(100,150,220,0.25);border-radius:8px;padding:9px 13px;pointer-events:none;min-width:185px}
+#legend h3{font-size:10px;color:#64748b;margin-bottom:6px;letter-spacing:1px;text-transform:uppercase}
+.leg{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:10px;color:#cbd5e1}
+.ls{width:16px;height:3px;border-radius:2px;flex-shrink:0}
+.lc{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+#rot-btns{position:absolute;top:12px;right:12px;display:grid;grid-template-columns:repeat(3,30px);gap:3px;pointer-events:all}
+.rb{width:30px;height:30px;background:rgba(15,35,65,0.88);border:1px solid rgba(100,150,220,0.25);border-radius:5px;color:#64748b;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.rb:hover{background:rgba(30,60,110,0.95);color:#93c5fd}
+#rot-btns .empty{width:30px;height:30px}
+
+#info{position:absolute;bottom:12px;right:12px;background:rgba(5,15,30,0.92);border:1px solid rgba(100,150,220,0.25);border-radius:8px;padding:10px 13px;max-width:230px;pointer-events:none}
+#info h3{font-size:11px;color:#fbbf24;margin-bottom:4px}
+#info p{font-size:10px;color:#94a3b8;line-height:1.55}
+
+#hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:9px;color:#334155;text-align:center;pointer-events:none}
+#phase-toast{position:absolute;top:58px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);border-radius:20px;padding:3px 14px;font-size:11px;color:#fde68a;pointer-events:none;display:none;white-space:nowrap}
+
+/* EXPLOSION CANVAS */
+#fx-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<canvas id="fx-canvas"></canvas>
+
+<div id="ui">
+  <div id="title-bar">
+    <h1>⚑ CHIẾN DỊCH ĐIỆN BIÊN PHỦ 1954</h1>
+    <p>Mô hình 3D Tương tác · Âm thanh trận địa · Giọng kể lịch sử</p>
+  </div>
+
+  <div id="phase-panel">
+    <button class="phase-btn p0 active" onclick="setPhase(0)">🗺 Toàn cảnh chiến trường<span>Địa hình & vị trí tổng quát</span></button>
+    <button class="phase-btn p1" onclick="setPhase(1)">⚔ Đợt 1: 13/3 – 17/3/1954<span>Xóa bỏ Phân khu Bắc · Him Lam, Độc Lập</span></button>
+    <button class="phase-btn p2" onclick="setPhase(2)">⚔ Đợt 2: 30/3 – 30/4/1954<span>Đánh chiếm điểm cao phía Đông</span></button>
+    <button class="phase-btn p3" onclick="setPhase(3)">⚔ Đợt 3: 1/5 – 7/5/1954<span>Tổng công kích · Toàn thắng !</span></button>
+  </div>
+
+  <div id="sound-panel">
+    <button class="sbtn" id="btn-ambient" onclick="toggleAmbient()">🔇 Âm thanh nền</button>
+    <button class="sbtn" id="btn-narrate" onclick="toggleNarrate()">🎙 Giọng kể chuyện</button>
+    <button class="sbtn" id="btn-cannon" onclick="fireCannon()">💥 Pháo kích</button>
+    <div id="vol-wrap">🔊<input type="range" id="vol" min="0" max="1" step="0.05" value="0.6" oninput="setVol(this.value)"> Âm lượng</div>
+  </div>
+
+  <div id="narrator">
+    <div id="narrator-phase">GIỌNG KỂ</div>
+    <div id="narrator-text"></div>
+    <div id="narrator-progress"><div id="narrator-bar"></div></div>
+  </div>
+
+  <div id="legend">
+    <h3>Chú giải</h3>
+    <div class="leg"><div class="lc" style="background:#e53e3e"></div> Sở chỉ huy địch</div>
+    <div class="leg"><div class="lc" style="background:#dd6b20"></div> Cứ điểm địch</div>
+    <div class="leg"><div class="lc" style="background:#3b82f6"></div> Vị trí quân ta</div>
+    <div class="leg"><div class="ls" style="background:#f6e05e"></div> Đợt 1 – tiến công</div>
+    <div class="leg"><div class="ls" style="background:#fb923c"></div> Đợt 2 – tiến công</div>
+    <div class="leg"><div class="ls" style="background:#ef4444"></div> Đợt 3 – tiến công</div>
+    <div class="leg"><div class="ls" style="background:#a855f7"></div> Giao thông hào</div>
+    <div class="leg"><div class="ls" style="background:#60a5fa"></div> Sông Nậm Rốm</div>
+  </div>
+
+  <div id="rot-btns">
+    <div class="empty"></div><button class="rb" id="btn-up">▲</button><div class="empty"></div>
+    <button class="rb" id="btn-left">◁</button>
+    <button class="rb" id="btn-reset" title="Reset">⌂</button>
+    <button class="rb" id="btn-right">▷</button>
+    <div class="empty"></div><button class="rb" id="btn-down">▼</button><div class="empty"></div>
+  </div>
+
+  <div id="info">
+    <h3 id="info-title">Di chuột để xem thông tin</h3>
+    <p id="info-desc">Hover vào các điểm để xem chi tiết lịch sử.</p>
+  </div>
+
+  <div id="phase-toast"></div>
+  <div id="hint">🖱 Kéo xoay 360° · Scroll zoom · Nhấn 🎙 để nghe kể chuyện</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CANVAS SETUP
+// ══════════════════════════════════════════════════════════════════
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const fxCanvas = document.getElementById('fx-canvas');
+const fxCtx = fxCanvas.getContext('2d');
+
+function resize(){
+  canvas.width = fxCanvas.width = window.innerWidth * devicePixelRatio;
+  canvas.height = fxCanvas.height = window.innerHeight * devicePixelRatio;
+  canvas.style.width = fxCanvas.style.width = window.innerWidth+'px';
+  canvas.style.height = fxCanvas.style.height = window.innerHeight+'px';
+}
+resize(); window.addEventListener('resize',resize);
+
+// ══════════════════════════════════════════════════════════════════
+// WEB AUDIO ENGINE
+// ══════════════════════════════════════════════════════════════════
+let AC=null, masterGain=null, ambientOn=false, ambientNodes=[];
+let globalVol = 0.6;
+
+function initAudio(){
+  if(AC) return;
+  AC = new (window.AudioContext||window.webkitAudioContext)();
+  masterGain = AC.createGain();
+  masterGain.gain.value = globalVol;
+  masterGain.connect(AC.destination);
+}
+
+function setVol(v){ globalVol=parseFloat(v); if(masterGain) masterGain.gain.value=globalVol; }
+
+// ── Noise buffer helper ──
+function makeNoise(dur, type='white'){
+  const buf = AC.createBuffer(1, AC.sampleRate*dur, AC.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1);
+  return buf;
+}
+
+// ── Play cannon boom ──
+function playCannon(vol=0.9){
+  initAudio();
+  const t = AC.currentTime;
+  // Low rumble body
+  const buf = makeNoise(1.5);
+  const src = AC.createBufferSource(); src.buffer=buf;
+  const lp = AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=180; lp.Q.value=1.5;
+  const g = AC.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+1.8);
+  src.connect(lp); lp.connect(g); g.connect(masterGain);
+  src.start(t); src.stop(t+1.8);
+  // Sharp crack transient
+  const buf2 = makeNoise(0.08);
+  const src2 = AC.createBufferSource(); src2.buffer=buf2;
+  const hp = AC.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=800;
+  const g2 = AC.createGain(); g2.gain.setValueAtTime(vol*0.7,t); g2.gain.exponentialRampToValueAtTime(0.001,t+0.15);
+  src2.connect(hp); hp.connect(g2); g2.connect(masterGain);
+  src2.start(t); src2.stop(t+0.15);
+  // Distant echo
+  const osc = AC.createOscillator(); osc.frequency.value=55;
+  const g3 = AC.createGain(); g3.gain.setValueAtTime(vol*0.4,t+0.05); g3.gain.exponentialRampToValueAtTime(0.001,t+0.8);
+  osc.connect(g3); g3.connect(masterGain);
+  osc.start(t+0.05); osc.stop(t+0.8);
+}
+
+// ── Play gunfire burst ──
+function playGunfire(count=8, interval=90){
+  initAudio();
+  for(let i=0;i<count;i++){
+    setTimeout(()=>{
+      const t=AC.currentTime;
+      const buf=makeNoise(0.12);
+      const src=AC.createBufferSource(); src.buffer=buf;
+      const hp=AC.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2200;
+      const g=AC.createGain(); g.gain.setValueAtTime(0.3+Math.random()*0.2,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.15);
+      src.connect(hp); hp.connect(g); g.connect(masterGain);
+      src.start(t); src.stop(t+0.15);
+    }, i*(interval+Math.random()*40));
+  }
+}
+
+// ── Play explosion (big) ──
+function playExplosion(vol=1.0){
+  initAudio();
+  const t=AC.currentTime;
+  // Deep thud
+  [60,80,110].forEach((freq,idx)=>{
+    const osc=AC.createOscillator(); osc.frequency.value=freq;
+    const g=AC.createGain(); g.gain.setValueAtTime(vol*(0.6-idx*0.15),t); g.gain.exponentialRampToValueAtTime(0.001,t+1.2-idx*0.2);
+    osc.connect(g); g.connect(masterGain);
+    osc.start(t); osc.stop(t+1.2);
+  });
+  // Noise burst
+  const buf=makeNoise(1.2);
+  const src=AC.createBufferSource(); src.buffer=buf;
+  const bp=AC.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=350; bp.Q.value=0.5;
+  const g=AC.createGain(); g.gain.setValueAtTime(vol*0.8,t); g.gain.exponentialRampToValueAtTime(0.001,t+1.4);
+  src.connect(bp); bp.connect(g); g.connect(masterGain);
+  src.start(t); src.stop(t+1.4);
+}
+
+// ── Ambient battlefield loop ──
+function startAmbient(){
+  initAudio();
+  if(ambientNodes.length) return;
+  // Wind/forest drone
+  const windBuf=makeNoise(4,'pink');
+  function loopWind(){
+    const src=AC.createBufferSource(); src.buffer=windBuf; src.loop=true;
+    const lp=AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=600;
+    const g=AC.createGain(); g.gain.value=0.06;
+    src.connect(lp); lp.connect(g); g.connect(masterGain);
+    src.start();
+    ambientNodes.push({src,g});
+  }
+  loopWind();
+  // Distant rumble (very low, intermittent)
+  function scheduleRumble(){
+    const delay=4000+Math.random()*8000;
+    const id=setTimeout(()=>{
+      playCannon(0.25+Math.random()*0.3);
+      scheduleRumble();
+    },delay);
+    ambientNodes.push({timer:id});
+  }
+  scheduleRumble();
+  // Occasional gunfire
+  function scheduleGuns(){
+    const delay=7000+Math.random()*12000;
+    const id=setTimeout(()=>{
+      playGunfire(3+Math.floor(Math.random()*6), 80+Math.random()*60);
+      scheduleGuns();
+    },delay);
+    ambientNodes.push({timer:id});
+  }
+  scheduleGuns();
+}
+
+function stopAmbient(){
+  ambientNodes.forEach(n=>{
+    if(n.src) try{ n.src.stop(); }catch(e){}
+    if(n.timer) clearTimeout(n.timer);
+  });
+  ambientNodes=[];
+}
+
+function toggleAmbient(){
+  initAudio();
+  ambientOn=!ambientOn;
+  const btn=document.getElementById('btn-ambient');
+  if(ambientOn){ startAmbient(); btn.textContent='🔊 Âm thanh nền'; btn.classList.add('active'); }
+  else{ stopAmbient(); btn.textContent='🔇 Âm thanh nền'; btn.classList.remove('active'); }
+}
+
+function fireCannon(){
+  initAudio();
+  playExplosion(0.9);
+  playCannon(1.0);
+  setTimeout(()=>playGunfire(12,70), 400);
+  // Trigger visual explosions
+  triggerExplosions(3+Math.floor(Math.random()*3));
+}
+
+// ══════════════════════════════════════════════════════════════════
+// NARRATOR – Web Speech API (Vietnamese)
+// ══════════════════════════════════════════════════════════════════
+const NARRATIONS = {
+  0: {
+    phase: 'TOÀN CẢNH CHIẾN TRƯỜNG',
+    sentences: [
+      'Thung lũng Mường Thanh — một lòng chảo hình bầu dục dài hai mươi kilômét, rộng sáu kilômét, nằm giữa vùng núi rừng hiểm trở của Tây Bắc Việt Nam.',
+      'Đây là nơi thực dân Pháp xây dựng tập đoàn cứ điểm mạnh nhất Đông Dương, với 49 cứ điểm, hơn 16.000 quân tinh nhuệ, pháo binh, xe tăng và máy bay.',
+      'Tướng Nava tự hào gọi đây là "pháo đài bất khả xâm phạm". Nhưng họ đã lầm.',
+      'Đại tướng Võ Nguyên Giáp đã đưa ra quyết định lịch sử: đánh chắc, tiến chắc — mở màn một chiến dịch kéo dài 55 ngày đêm bất tử.'
+    ]
+  },
+  1: {
+    phase: 'ĐỢT 1 · 13/3 – 17/3/1954',
+    sentences: [
+      'Đúng 17 giờ 5 phút ngày 13 tháng 3 năm 1954 — bốn mươi khẩu pháo cỡ nòng từ 75 đến 120 ly đồng loạt nhả đạn vào Him Lam.',
+      'Him Lam — hay Béatrice theo tên Pháp — là cứ điểm kiên cố nhất cửa ngõ phía Bắc. Tiểu đoàn 3 Lê dương tinh nhuệ trấn giữ nơi đây.',
+      'Đại đoàn 312 dũng mãnh tiến công. Đến 23 giờ đêm, Him Lam hoàn toàn im tiếng súng địch. Lá cờ đỏ sao vàng tung bay trên cứ điểm.',
+      'Ngày 15 tháng 3, Đồi Độc Lập thất thủ. Ngày 17 tháng 3, lính người Thái ở Bản Kéo bỏ ngũ, rút về Mường Thanh. Phân khu Bắc bị xóa sổ hoàn toàn.',
+      'Pirốt — Tư lệnh pháo binh Pháp — bất lực trước uy lực pháo binh của ta, đã dùng lựu đạn tự sát. Mường Thanh bắt đầu run rẩy.'
+    ]
+  },
+  2: {
+    phase: 'ĐỢT 2 · 30/3 – 30/4/1954',
+    sentences: [
+      'Đêm 30 tháng 3 năm 1954 — những mũi tiến công của Đại đoàn 316 đồng loạt đánh vào dãy đồi phía Đông: Eliane, Dominique, những điểm cao quyết định.',
+      'Đây là đợt tấn công dai dẳng nhất, quyết liệt nhất, gay go nhất của toàn chiến dịch. Ta và địch giành giật nhau từng tấc đất, từng đoạn giao thông hào.',
+      'Tại Đồi C1, quân ta và địch giằng co nhau tới 20 ngày. Tại Đồi A1 — điểm cao then chốt — cuộc chiến kéo dài tới 30 ngày đêm không dứt.',
+      'Hệ thống chiến hào của ta bò dần từ chân núi, ngày qua ngày, siết chặt vòng vây, cắt đứt mọi đường tiếp tế của quân Pháp.',
+      'Sân bay Mường Thanh tê liệt hoàn toàn. Quân địch rơi vào tình trạng bị động, mất tinh thần. Tướng Nava tuyệt vọng cầu cứu Washington và Paris.'
+    ]
+  },
+  3: {
+    phase: 'ĐỢT 3 · 1/5 – 7/5/1954 · TOÀN THẮNG',
+    sentences: [
+      'Ngày 1 tháng 5 năm 1954 — 17 giờ, tất cả các cỡ pháo của ta đồng loạt nhả đạn vào nhiều khu vực của tập đoàn cứ điểm. Một kho đạn 3.000 viên của địch nổ tung.',
+      'Đêm 6 tháng 5, bộ đội ta kích nổ một khối thuốc nổ lớn đặt sâu dưới lòng Đồi A1. Tiếng nổ vang trời — rạng sáng 7 tháng 5, A1 hoàn toàn về tay ta.',
+      'Những đường hào thọc sâu trên cánh đồng phía Tây nhắm thẳng về hầm De Castries. Tập đoàn cứ điểm bị dồn lại trong cái ô vuông cuối cùng.',
+      'Chiều 7 tháng 5 năm 1954 — 17 giờ 30 phút — Tướng De Castries cùng toàn bộ Bộ Tham mưu ra hàng. Lá cờ đỏ sao vàng tung bay trên nóc hầm chỉ huy.',
+      'Năm mươi lăm ngày đêm kiên cường chiến đấu kết thúc. Chín nghìn tù binh Pháp. Chiến thắng Điện Biên Phủ — chấn động địa cầu — mãi mãi là niềm tự hào bất diệt của dân tộc Việt Nam!'
+    ]
+  }
+};
+
+let narrateOn=false, currentUtterance=null, narratePhase=-1, sentenceIdx=0, narrateTimer=null;
+
+function toggleNarrate(){
+  narrateOn=!narrateOn;
+  const btn=document.getElementById('btn-narrate');
+  if(narrateOn){
+    btn.textContent='⏹ Dừng kể'; btn.classList.add('narr-active');
+    startNarration(phase);
+  } else {
+    stopNarration();
+    btn.textContent='🎙 Giọng kể chuyện'; btn.classList.remove('narr-active');
+  }
+}
+
+function stopNarration(){
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  if(narrateTimer) clearTimeout(narrateTimer);
+  document.getElementById('narrator').style.display='none';
+  sentenceIdx=0; narratePhase=-1;
+  document.getElementById('narrator-bar').style.width='0%';
+}
+
+function startNarration(p){
+  stopNarration();
+  if(!narrateOn) return;
+  narratePhase=p;
+  const data=NARRATIONS[p];
+  if(!data) return;
+  sentenceIdx=0;
+  document.getElementById('narrator').style.display='block';
+  document.getElementById('narrator-phase').textContent=data.phase;
+  speakSentence(p, 0);
+}
+
+function speakSentence(p, idx){
+  if(!narrateOn||narratePhase!==p) return;
+  const data=NARRATIONS[p];
+  if(!data||idx>=data.sentences.length){ stopNarration(); return; }
+  const total=data.sentences.length;
+  const pct=Math.round((idx/total)*100);
+  document.getElementById('narrator-bar').style.width=pct+'%';
+  // Highlight key terms
+  let txt=data.sentences[idx];
+  const keywords=['Him Lam','Độc Lập','Bản Kéo','De Castries','Đồi A1','Võ Nguyên Giáp','Điện Biên Phủ','lá cờ đỏ sao vàng','Tổng tấn công','55 ngày đêm','17 giờ 30 phút'];
+  let html=txt;
+  keywords.forEach(k=>{ html=html.replaceAll(k,`<span class="highlight">${k}</span>`); });
+  document.getElementById('narrator-text').innerHTML=html;
+  if(window.speechSynthesis){
+    const utt=new SpeechSynthesisUtterance(txt);
+    utt.lang='vi-VN'; utt.rate=0.88; utt.pitch=1.05; utt.volume=1;
+    // Try to find Vietnamese voice
+    const voices=speechSynthesis.getVoices();
+    const viVoice=voices.find(v=>v.lang.startsWith('vi'))||voices.find(v=>v.lang.startsWith('vi-'))||null;
+    if(viVoice) utt.voice=viVoice;
+    utt.onend=()=>{
+      narrateTimer=setTimeout(()=>speakSentence(p, idx+1), 600);
+    };
+    utt.onerror=()=>{ narrateTimer=setTimeout(()=>speakSentence(p, idx+1), 2000); };
+    currentUtterance=utt;
+    speechSynthesis.speak(utt);
+    // Trigger audio sfx on key lines
+    initAudio();
+    if(idx===0&&(p===1||p===2||p===3)){ setTimeout(()=>{ playCannon(0.6); playGunfire(5,100); }, 500); }
+    if(p===3&&idx===1){ setTimeout(()=>{ playExplosion(0.8); triggerExplosions(5); }, 800); }
+    if(p===3&&idx===3){ setTimeout(()=>{ playVictory(); }, 1200); }
+  } else {
+    // Fallback: auto-advance without speech
+    narrateTimer=setTimeout(()=>speakSentence(p, idx+1), 4000);
+  }
+}
+
+// ── Victory fanfare (synthesized) ──
+function playVictory(){
+  initAudio();
+  const t=AC.currentTime;
+  const melody=[523,659,784,1047,784,1047,1175,1047]; // C5 E5 G5 C6 ...
+  melody.forEach((freq,i)=>{
+    const osc=AC.createOscillator(); osc.type='square'; osc.frequency.value=freq;
+    const g=AC.createGain(); g.gain.setValueAtTime(0,t+i*0.18); g.gain.linearRampToValueAtTime(0.15,t+i*0.18+0.05); g.gain.exponentialRampToValueAtTime(0.001,t+i*0.18+0.38);
+    osc.connect(g); g.connect(masterGain); osc.start(t+i*0.18); osc.stop(t+i*0.18+0.4);
+  });
+  // Bass
+  [131,131,165,196].forEach((freq,i)=>{
+    const osc=AC.createOscillator(); osc.type='sawtooth'; osc.frequency.value=freq;
+    const g=AC.createGain(); g.gain.setValueAtTime(0.08,t+i*0.36); g.gain.exponentialRampToValueAtTime(0.001,t+i*0.36+0.35);
+    osc.connect(g); g.connect(masterGain); osc.start(t+i*0.36); osc.stop(t+i*0.36+0.35);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// VISUAL FX – Explosions
+// ══════════════════════════════════════════════════════════════════
+let particles=[], explosions=[];
+
+function triggerExplosions(n=3){
+  for(let i=0;i<n;i++){
+    setTimeout(()=>{
+      const W=window.innerWidth, H=window.innerHeight;
+      const cx=W*0.35+Math.random()*W*0.3;
+      const cy=H*0.3+Math.random()*H*0.35;
+      // Spawn particles
+      for(let p=0;p<28;p++){
+        const ang=Math.random()*Math.PI*2;
+        const spd=1.5+Math.random()*4;
+        particles.push({ x:cx, y:cy, vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd-2,
+          life:1, decay:0.02+Math.random()*0.025,
+          r:2+Math.random()*5, color:`hsl(${25+Math.random()*30},90%,${50+Math.random()*30}%)` });
+      }
+      // Flash ring
+      explosions.push({x:cx,y:cy,r:0,maxR:60+Math.random()*40,life:1,decay:0.06});
+    }, i*180);
+  }
+}
+
+function drawFX(){
+  const W=window.innerWidth, H=window.innerHeight;
+  fxCtx.save(); fxCtx.scale(devicePixelRatio,devicePixelRatio);
+  fxCtx.clearRect(0,0,W,H);
+  // Explosions rings
+  explosions=explosions.filter(e=>e.life>0);
+  explosions.forEach(e=>{
+    fxCtx.beginPath();
+    fxCtx.arc(e.x,e.y,e.r,0,Math.PI*2);
+    fxCtx.strokeStyle=`rgba(255,180,50,${e.life*0.8})`;
+    fxCtx.lineWidth=4*e.life;
+    fxCtx.stroke();
+    e.r+=e.maxR*e.decay*2; e.life-=e.decay;
+  });
+  // Particles
+  particles=particles.filter(p=>p.life>0);
+  particles.forEach(p=>{
+    fxCtx.beginPath();
+    fxCtx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
+    fxCtx.fillStyle=p.color.replace(')',`,${p.life})`).replace('hsl','hsla');
+    fxCtx.fill();
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.life-=p.decay;
+  });
+  fxCtx.restore();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 3D MAP ENGINE (identical to previous, fully preserved)
+// ══════════════════════════════════════════════════════════════════
+let rotX=0.52, rotY=0.18, scale=1.0;
+let drag=false, lastX=0, lastY=0;
+let phase=0, pulseT=0, arrowT=0, hovered=null;
+
+function proj(x,y,z){
+  const cY=Math.cos(rotY),sY=Math.sin(rotY),cX=Math.cos(rotX),sX=Math.sin(rotX);
+  let rx=x*cY-z*sY, rz=x*sY+z*cY;
+  let ry=y*cX-rz*sX, rz2=y*sX+rz*cX;
+  const fov=700*scale, d=fov/(fov+rz2+350);
+  const W=canvas.width/devicePixelRatio, H=canvas.height/devicePixelRatio;
+  return{sx:W/2+rx*d*62,sy:H/2+ry*d*62,d,rz2};
+}
+
+function makeTerrain(){
+  const G=28,pts=[];
+  for(let i=0;i<=G;i++){pts[i]=[];for(let j=0;j<=G;j++){
+    const nx=(i-G/2)/(G/2)*14, nz=(j-G/2)/(G/2)*16;
+    const vW=3.5,vL=11, inV=(nx/vW)**2+(nz/vL)**2;
+    let h;
+    if(inV<1){h=-2+Math.sin(nx*0.4)*0.15+Math.cos(nz*0.3)*0.1;}
+    else{
+      const edge=Math.sqrt((nx/vW)**2+(nz/vL)**2)-1;
+      h=-2+Math.min(8,edge*4.5);
+      [{x:4,z:-6.5,r:2.2,hh:3.5},{x:-1,z:-8,r:2,hh:3},{x:-5,z:-5,r:1.8,hh:2.5},
+       {x:5,z:0,r:3,hh:4},{x:4.5,z:2,r:2.5,hh:3.5},{x:-5,z:3,r:2,hh:2.8},{x:2,z:12,r:3,hh:2.5}]
+      .forEach(pk=>{const d2=Math.sqrt((nx-pk.x)**2+(nz-pk.z)**2);if(d2<pk.r)h+=pk.hh*(1-d2/pk.r)**1.8;});
+    }
+    pts[i][j]=h;
+  }}
+  return pts;
+}
+const terrain=makeTerrain(),G=28;
+
+function tColor(h){
+  if(h<-1.8)return'#8B7355';if(h<-1.5)return'#6B8F51';if(h<-1)return'#5a8a45';
+  if(h<-0.5)return'#4a7a38';if(h<0)return'#3d6b30';if(h<1)return'#4a7040';
+  if(h<2)return'#556040';if(h<3.5)return'#5a5535';if(h<5)return'#6b5a40';return'#7a6b58';
+}
+
+const LOC=[
+  {id:'HQ',name:'Hầm De Castries (Sở chỉ huy)',desc:'Trung tâm chỉ huy tập đoàn cứ điểm. Bờ Tây sông Nậm Rốm. Thất thủ 7/5/1954 lúc 17:30.',x:-1.5,z:0.5,h:-1.8,type:'hq',color:'#e53e3e',size:10},
+  {id:'E1',name:'Đồi E1 (Eliane 1)',desc:'Cứ điểm bờ Đông sông Nậm Rốm. Bị tiến công đợt 2.',x:3.8,z:-0.5,h:0.5,type:'fp',color:'#dd6b20',size:7},
+  {id:'D1',name:'Đồi D1 (Dominique 1)',desc:'Phía Đông Bắc trung tâm. Bị đánh chiếm đêm 30/3.',x:4.5,z:-1.5,h:0.8,type:'fp',color:'#dd6b20',size:7},
+  {id:'D3',name:'Đồi D3 (Dominique 3)',desc:'Cứ điểm Đông Bắc. Bị chiếm cùng đợt D1.',x:3.5,z:-1.8,h:0.5,type:'fp',color:'#dd6b20',size:6},
+  {id:'C1',name:'Đồi C1 (Eliane 4)',desc:'Chiến đấu ác liệt đợt 2. Giằng co 20 ngày.',x:4.2,z:0.8,h:0.6,type:'fp',color:'#dd6b20',size:7},
+  {id:'A1',name:'Đồi A1 (Eliane 2) – "Tử huyệt"',desc:'Cứ điểm quan trọng nhất phía Đông. Chiến đấu 30 ngày. Thất thủ rạng sáng 7/5.',x:4.0,z:1.5,h:0.9,type:'fp',color:'#c05030',size:8},
+  {id:'A2',name:'Đồi A2',desc:'Cứ điểm phía Đông Nam.',x:2.8,z:2.2,h:0.3,type:'fp',color:'#dd6b20',size:6},
+  {id:'A3',name:'Đồi A3',desc:'Gần trung tâm Mường Thanh, phía Đông.',x:2.0,z:1.5,h:0.2,type:'fp',color:'#dd6b20',size:6},
+  {id:'D2',name:'Đồi D2 (Dominique 2)',desc:'Án ngữ phía Đông sân bay.',x:2.5,z:-0.8,h:0.4,type:'fp',color:'#dd6b20',size:6},
+  {id:'HL',name:'Him Lam (Béatrice)',desc:'Cứ điểm đầu tiên bị tiêu diệt. Đêm 13/3/1954. Đại đoàn 312 tiến công.',x:4,z:-6.5,h:2.2,type:'fp',color:'#dd6b20',size:8},
+  {id:'DL',name:'Đồi Độc Lập (Gabrielle)',desc:'Bị tiêu diệt ngày 15/3/1954. Đại đoàn 308.',x:-1,z:-8,h:2.0,type:'fp',color:'#dd6b20',size:8},
+  {id:'BK',name:'Bản Kéo (Anne-Marie)',desc:'Lính người Thái bỏ ngũ rút lui 17/3/1954.',x:-5,z:-5.5,h:1.5,type:'fp',color:'#dd6b20',size:7},
+  {id:'HC',name:'Hồng Cúm (Isabelle)',desc:'Phân khu Nam. Sân bay phụ. Bị bao vây và tiêu diệt đợt 3.',x:1,z:12,h:-1.5,type:'fp',color:'#dd6b20',size:8},
+  {id:'APM',name:'Sân bay Mường Thanh',desc:'Sân bay chính – tê liệt hoàn toàn từ đợt 1.',x:-1,z:-2,h:-1.85,type:'airport',color:'#718096',size:5},
+  {id:'APH',name:'Sân bay Hồng Cúm',desc:'Sân bay phụ – tiếp tế cuối cùng của Pháp.',x:1.5,z:10.5,h:-1.6,type:'airport',color:'#718096',size:4},
+  {id:'MT',name:'Mường Thanh',desc:'Trung tâm thung lũng.',x:-1.2,z:0,h:-1.85,type:'village',color:'#a0aec0',size:4},
+  {id:'BB',name:'Bản Ban',desc:'Làng phía Tây.',x:-4,z:1,h:-1.5,type:'village',color:'#a0aec0',size:3},
+  {id:'BHL',name:'Bản Hồng Lại',desc:'Làng phía Đông Nam.',x:4.5,z:3,h:-0.5,type:'village',color:'#a0aec0',size:3},
+  {id:'BT',name:'Bản Ten',desc:'Làng phía Đông Nam.',x:2,z:6,h:-1.2,type:'village',color:'#a0aec0',size:3},
+  {id:'BMe',name:'Bản Me',desc:'Làng phía Tây Nam.',x:-5,z:5,h:-0.8,type:'village',color:'#a0aec0',size:3},
+  {id:'BLN',name:'Bản Long Nhai',desc:'Làng phía Nam.',x:-2,z:8,h:-1.3,type:'village',color:'#a0aec0',size:3},
+  {id:'BNK',name:'Bản Na Khua',desc:'Làng phía Tây Nam.',x:-6,z:7,h:-0.5,type:'village',color:'#a0aec0',size:3},
+  {id:'BMo',name:'Bản Mơ',desc:'Làng phía Nam gần Hồng Cúm.',x:-3,z:11,h:-1.0,type:'village',color:'#a0aec0',size:3},
+  {id:'BSo',name:'Bản Sơm',desc:'Làng phía Nam.',x:3,z:13,h:-0.8,type:'village',color:'#a0aec0',size:3},
+  {id:'BTP',name:'Bản Ta Po',desc:'Làng phía Bắc.',x:1,z:-9,h:0.5,type:'village',color:'#a0aec0',size:3},
+  {id:'VN1',name:'Đại đoàn 312 – Him Lam',desc:'Tiến công Him Lam đêm 13/3.',x:7,z:-9,h:2,type:'viet',color:'#3b82f6',size:6},
+  {id:'VN2',name:'Đại đoàn 308 – Độc Lập',desc:'Tiến công Độc Lập ngày 15/3.',x:-5,z:-11,h:2.5,type:'viet',color:'#3b82f6',size:6},
+  {id:'VN3',name:'Đại đoàn 316 – Hướng Đông',desc:'Tiến công các đồi phía Đông đợt 2–3.',x:10,z:1,h:3,type:'viet',color:'#3b82f6',size:6},
+  {id:'VN4',name:'Đại đoàn 304 – Hướng Nam',desc:'Bao vây Hồng Cúm, tiêu diệt đợt 3.',x:0,z:15,h:1,type:'viet',color:'#3b82f6',size:6},
+  {id:'VN5',name:'Đại đoàn 351 – Pháo binh',desc:'Pháo binh và công binh trên các điểm cao.',x:-9,z:-3,h:4,type:'viet',color:'#3b82f6',size:5},
+];
+
+const ROUTES=[
+  {phase:1,color:'#f6e05e',w:3,label:'ĐĐ 312→Him Lam',pts:[{x:7,z:-9},{x:5.5,z:-8},{x:4.5,z:-7},{x:4,z:-6.5}]},
+  {phase:1,color:'#f6e05e',w:2.5,label:'ĐĐ 308→Độc Lập',pts:[{x:-4,z:-11},{x:-2,z:-9.5},{x:-1,z:-8}]},
+  {phase:1,color:'#f6e05e',w:2,label:'→Bản Kéo',pts:[{x:-8,z:-7},{x:-6.5,z:-6.5},{x:-5,z:-5.5}]},
+  {phase:1,color:'#9ca3af',w:1.5,dash:true,label:'Pháp rút lui',pts:[{x:-5,z:-5.5},{x:-3,z:-4},{x:-1.5,z:-2},{x:-1.5,z:0.5}]},
+  {phase:2,color:'#fb923c',w:3,label:'→A1,C1',pts:[{x:10,z:0},{x:7,z:0.5},{x:5.5,z:1},{x:4,z:1.5}]},
+  {phase:2,color:'#fb923c',w:2.5,label:'→E1,D3',pts:[{x:9,z:-2},{x:6.5,z:-1.5},{x:5,z:-1},{x:3.8,z:-0.5}]},
+  {phase:2,color:'#fb923c',w:2,label:'→D1',pts:[{x:8,z:-3},{x:6,z:-2.5},{x:5,z:-2},{x:4.5,z:-1.5}]},
+  {phase:2,color:'#a855f7',w:1.5,dash:true,label:'Hào vây lấn',pts:[{x:8,z:-1},{x:6,z:0},{x:5.5,z:1},{x:5,z:2.5},{x:4.5,z:3.5}]},
+  {phase:2,color:'#a855f7',w:1.5,dash:true,pts:[{x:6,z:-3},{x:5,z:-2},{x:4.8,z:-1},{x:4.5,z:-0.5}]},
+  {phase:3,color:'#ef4444',w:3.5,label:'Tổng công kích→De Castries',pts:[{x:4,z:1.5},{x:3,z:1.2},{x:1.5,z:0.8},{x:0,z:0.6},{x:-1.5,z:0.5}]},
+  {phase:3,color:'#ef4444',w:3,label:'Từ A1 vượt sông',pts:[{x:4.2,z:0.8},{x:2.5,z:0.7},{x:0.5,z:0.6},{x:-1.5,z:0.5}]},
+  {phase:3,color:'#ef4444',w:2.5,label:'Phía Bắc xuống',pts:[{x:0,z:-4},{x:-0.5,z:-2},{x:-1,z:-0.5},{x:-1.5,z:0.5}]},
+  {phase:3,color:'#ef4444',w:2,label:'Phía Nam lên',pts:[{x:-1,z:4},{x:-1.2,z:2.5},{x:-1.5,z:1.5},{x:-1.5,z:0.5}]},
+  {phase:3,color:'#f87171',w:2.5,label:'Bao vây Hồng Cúm',pts:[{x:-3,z:14},{x:-1,z:13},{x:1,z:12}]},
+  {phase:3,color:'#f87171',w:2,pts:[{x:5,z:14},{x:3,z:13},{x:1,z:12}]},
+  {phase:3,color:'#f87171',w:2,pts:[{x:2,z:8},{x:1.5,z:10},{x:1,z:12}]},
+];
+
+function drawTerrain(){
+  for(let i=0;i<G;i++)for(let j=0;j<G;j++){
+    const corners=[
+      {x:(i-G/2),y:-terrain[i][j],z:(j-G/2)*1.1},
+      {x:(i+1-G/2),y:-terrain[i+1][j],z:(j-G/2)*1.1},
+      {x:(i+1-G/2),y:-terrain[i+1][j+1],z:(j+1-G/2)*1.1},
+      {x:(i-G/2),y:-terrain[i][j+1],z:(j+1-G/2)*1.1},
+    ];
+    const avgH=(terrain[i][j]+terrain[i+1][j]+terrain[i+1][j+1]+terrain[i][j+1])/4;
+    const ps=corners.map(c=>proj(c.x,c.y,c.z));
+    const v1x=ps[1].sx-ps[0].sx,v1y=ps[1].sy-ps[0].sy,v2x=ps[3].sx-ps[0].sx,v2y=ps[3].sy-ps[0].sy;
+    if(v1x*v2y-v1y*v2x>0)continue;
+    ctx.beginPath();ctx.moveTo(ps[0].sx,ps[0].sy);
+    for(let k=1;k<4;k++)ctx.lineTo(ps[k].sx,ps[k].sy);
+    ctx.closePath();ctx.fillStyle=tColor(avgH);ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.1)';ctx.lineWidth=0.2;ctx.stroke();
+  }
+}
+
+function drawRiver(){
+  const rp=[{x:1.5,z:-12},{x:1.8,z:-10},{x:1.2,z:-8},{x:0.8,z:-6},{x:0.6,z:-4},{x:0.8,z:-2},
+            {x:0.7,z:0},{x:0.5,z:2},{x:0.3,z:4},{x:0.6,z:6},{x:0.8,z:8},{x:0.5,z:10},{x:0.6,z:12},{x:0.8,z:14}];
+  const ps=rp.map(r=>proj(r.x,-1.88,r.z));
+  ctx.beginPath();ctx.moveTo(ps[0].sx,ps[0].sy);
+  for(let i=1;i<ps.length;i++){const pc=ps[i-1],pn=ps[i];ctx.bezierCurveTo((pc.sx+pn.sx)/2,pc.sy,(pc.sx+pn.sx)/2,pn.sy,pn.sx,pn.sy);}
+  ctx.strokeStyle='rgba(100,180,255,0.88)';ctx.lineWidth=3.5*(ps[0].d*0.5+0.5);ctx.stroke();
+  ctx.strokeStyle='rgba(150,210,255,0.2)';ctx.lineWidth=7*(ps[0].d*0.5+0.5);ctx.stroke();
+  const mp=proj(1.2,-1.88,-4);
+  ctx.save();ctx.font=`italic bold ${Math.max(9,11*mp.d*0.5+5)}px Arial`;ctx.fillStyle='rgba(120,200,255,0.9)';ctx.textAlign='center';ctx.fillText('Sông Nậm Rốm',mp.sx,mp.sy);ctx.restore();
+}
+
+function drawRoad(){
+  const rdp=[{x:-2.5,z:-13},{x:-2.2,z:-10},{x:-2,z:-8},{x:-1.8,z:-5},{x:-1.6,z:-2},{x:-1.5,z:0},{x:-1.4,z:3},{x:-1.2,z:6},{x:-1,z:9},{x:-0.8,z:12},{x:-0.5,z:14}];
+  const ps=rdp.map(r=>proj(r.x,-1.88,r.z));
+  ctx.beginPath();ctx.moveTo(ps[0].sx,ps[0].sy);for(let i=1;i<ps.length;i++)ctx.lineTo(ps[i].sx,ps[i].sy);
+  ctx.strokeStyle='rgba(60,60,60,0.7)';ctx.lineWidth=2.5*(ps[0].d*0.4+0.6);ctx.stroke();
+  ctx.strokeStyle='rgba(100,100,100,0.3)';ctx.lineWidth=4.5*(ps[0].d*0.4+0.6);ctx.stroke();
+  const mp=proj(-2,-1.88,-8);ctx.font=`bold ${Math.max(8,9*mp.d*0.5+5)}px Arial`;ctx.fillStyle='rgba(150,150,150,0.8)';ctx.textAlign='center';ctx.fillText('Đường 41',mp.sx,mp.sy);
+}
+
+function drawAirports(){
+  [{pts:[{x:-1.8,z:-4},{x:-0.5,z:-4},{x:-0.5,z:-0.5},{x:-1.8,z:-0.5}],label:'Sân bay Mường Thanh'},
+   {pts:[{x:0.5,z:9},{x:2,z:9},{x:2,z:11.5},{x:0.5,z:11.5}],label:'Sân bay Hồng Cúm'}]
+  .forEach(s=>{
+    const ps=s.pts.map(p=>proj(p.x,-1.85,p.z));
+    ctx.beginPath();ctx.moveTo(ps[0].sx,ps[0].sy);ps.forEach(p=>ctx.lineTo(p.sx,p.sy));ctx.closePath();
+    ctx.fillStyle='rgba(80,80,80,0.5)';ctx.fill();ctx.strokeStyle='rgba(150,150,150,0.6)';ctx.lineWidth=1;ctx.stroke();
+    const mp=proj((s.pts[0].x+s.pts[2].x)/2,-1.84,(s.pts[0].z+s.pts[2].z)/2);
+    ctx.font=`bold ${Math.max(8,9*mp.d*0.5+4)}px Arial`;ctx.fillStyle='rgba(200,200,180,0.9)';ctx.textAlign='center';ctx.fillText('✈ '+s.label,mp.sx,mp.sy-5);
+  });
+}
+
+function drawDashedPoly(pts,color,lw,fill){
+  const ps=pts.map(p=>proj(p.x,-1.7,p.z));
+  ctx.beginPath();ctx.moveTo(ps[0].sx,ps[0].sy);ps.forEach(p=>ctx.lineTo(p.sx,p.sy));ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill();}
+  ctx.setLineDash([6,4]);ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.stroke();ctx.setLineDash([]);
+}
+
+function drawRings(){
+  if(phase===0||phase===1){
+    drawDashedPoly([{x:5,z:-9},{x:3,z:-9.5},{x:-0.5,z:-10},{x:-3,z:-8},{x:-6.5,z:-6},{x:-5.5,z:-4},{x:0,z:-4.5},{x:4,z:-5},{x:5,z:-9}],'#f9a8d4',2,'rgba(249,168,212,0.08)');
+    const rp=proj(0,-1.5,-7.5);ctx.font=`bold ${Math.max(8,9*rp.d*0.4+4)}px Arial`;ctx.fillStyle='rgba(249,168,212,0.85)';ctx.textAlign='center';ctx.fillText('PHÂN KHU BẮC',rp.sx,rp.sy);
+  }
+  if(phase===0||phase===2||phase===3){
+    drawDashedPoly([{x:5.5,z:-3},{x:5.5,z:0},{x:5,z:3},{x:3,z:4},{x:0,z:4.5},{x:-2.5,z:3},{x:-3,z:0},{x:-3,z:-3},{x:-1,z:-4},{x:2,z:-3.5},{x:5.5,z:-3}],phase===3?'#fca5a5':'#fdba74',1.5,'rgba(253,186,116,0.07)');
+    const cp=proj(4.5,-1.5,2.5);ctx.font=`bold ${Math.max(8,9*cp.d*0.4+4)}px Arial`;ctx.fillStyle='rgba(253,186,116,0.85)';ctx.textAlign='center';ctx.fillText('PHÂN KHU TRUNG TÂM',cp.sx,cp.sy);
+  }
+  if(phase===0||phase===3){
+    if(phase===3)drawDashedPoly([{x:1,z:-2},{x:2,z:0},{x:1.5,z:2},{x:-0.5,z:2.5},{x:-3,z:1.5},{x:-3,z:-1},{x:-1,z:-2},{x:1,z:-2}],'#ef4444',1.5,'rgba(239,68,68,0.1)');
+    drawDashedPoly([{x:-1,z:10.5},{x:1,z:9.5},{x:3.5,z:10},{x:4,z:12},{x:3,z:14},{x:0,z:14.5},{x:-2,z:13},{x:-1,z:10.5}],phase===3?'#ef4444':'#fdba74',1.5,'rgba(239,68,68,0.07)');
+    const hp=proj(1,-1.5,12);ctx.font=`bold ${Math.max(8,9*hp.d*0.4+4)}px Arial`;ctx.fillStyle='rgba(249,168,212,0.85)';ctx.textAlign='center';ctx.fillText('PHÂN KHU NAM',hp.sx,hp.sy);
+  }
+}
+
+function drawRoutes(){
+  ROUTES.forEach(r=>{
+    if(phase!==0&&r.phase!==phase)return;
+    const ps=r.pts.map(p=>proj(p.x,-1.7,p.z));
+    const off=r.dash?0:-(arrowT*25)%30;
+    ctx.save();ctx.beginPath();ctx.moveTo(ps[0].sx,ps[0].sy);
+    for(let i=1;i<ps.length;i++){const pc=ps[i-1],pn=ps[i];ctx.bezierCurveTo((pc.sx*2+pn.sx)/3,pc.sy,(pc.sx+pn.sx*2)/3,pn.sy,pn.sx,pn.sy);}
+    ctx.strokeStyle=r.color;ctx.lineWidth=r.w*(ps[0].d*0.5+0.5);ctx.globalAlpha=0.85;
+    ctx.setLineDash(r.dash?[5,4]:[12,6]);ctx.lineDashOffset=off;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+    ctx.setLineDash([]);ctx.restore();
+    if(ps.length>=2){
+      const p1=ps[ps.length-2],p2=ps[ps.length-1];
+      const ang=Math.atan2(p2.sy-p1.sy,p2.sx-p1.sx),as=10*(p2.d*0.4+0.6);
+      ctx.save();ctx.globalAlpha=0.9;ctx.beginPath();
+      ctx.moveTo(p2.sx,p2.sy);ctx.lineTo(p2.sx-as*Math.cos(ang-0.45),p2.sy-as*Math.sin(ang-0.45));
+      ctx.lineTo(p2.sx-as*0.6*Math.cos(ang),p2.sy-as*0.6*Math.sin(ang));
+      ctx.lineTo(p2.sx-as*Math.cos(ang+0.45),p2.sy-as*Math.sin(ang+0.45));
+      ctx.closePath();ctx.fillStyle=r.color;ctx.fill();ctx.restore();
+    }
+    if(r.label&&ps.length>=2){
+      const mp=ps[Math.floor(ps.length/2)];
+      ctx.font=`bold ${Math.max(7,8*mp.d*0.4+4)}px Arial`;ctx.fillStyle=r.color;ctx.textAlign='center';ctx.globalAlpha=0.9;ctx.fillText(r.label,mp.sx,mp.sy-5);ctx.globalAlpha=1;
+    }
+  });
+}
+
+function drawTrenches(){
+  if(phase<2)return;
+  [[{x:9,z:-0.5},{x:8,z:-0.5},{x:8,z:0.5},{x:7,z:0.5},{x:7,z:1},{x:6.5,z:1},{x:6.5,z:1.5},{x:6,z:1.5},{x:5.5,z:1.5},{x:5,z:1.5}],
+   [{x:8,z:-2},{x:7,z:-2},{x:7,z:-1},{x:6.5,z:-1},{x:6.5,z:-0.5},{x:6,z:-0.5},{x:5.5,z:-0.5},{x:5,z:-0.5}],
+   [{x:7,z:-3.5},{x:6,z:-3},{x:5.5,z:-2.5},{x:5.2,z:-2},{x:4.8,z:-1.5}]]
+  .forEach(seg=>{
+    const ps=seg.map(p=>proj(p.x,-1.7,p.z));
+    ctx.beginPath();ctx.moveTo(ps[0].sx,ps[0].sy);ps.forEach(p=>ctx.lineTo(p.sx,p.sy));
+    ctx.setLineDash([3,3]);ctx.strokeStyle='rgba(200,50,50,0.75)';ctx.lineWidth=1.5*(ps[0].d*0.4+0.6);ctx.lineCap='round';ctx.stroke();ctx.setLineDash([]);
+  });
+}
+
+let projPos=[];
+function drawPositions(){
+  projPos=[];
+  const sorted=LOC.slice().sort((a,b)=>proj(b.x,-(b.h+0.5),b.z).rz2-proj(a.x,-(a.h+0.5),a.z).rz2);
+  sorted.forEach(loc=>{
+    if((loc.id==='VN1'||loc.id==='VN2')&&phase!==0&&phase!==1)return;
+    if(loc.id==='VN3'&&phase!==0&&phase!==2&&phase!==3)return;
+    const isDefeated=phase===3&&(loc.type==='fp'||loc.type==='hq');
+    const p=proj(loc.x,-(loc.h+0.5),loc.z);
+    const r=loc.size*p.d*0.55+loc.size*0.45;
+    const pm=(loc.id==='HQ')?Math.sin(pulseT*3)*1.5:0;
+    ctx.beginPath();ctx.ellipse(p.sx+1.5,p.sy+2.5,r*1.1,r*0.45,0,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,0.35)';ctx.fill();
+    ctx.beginPath();
+    if(loc.type==='hq'){const pr=r+pm;for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2,rad=i%2===0?pr:pr*0.45;i===0?ctx.moveTo(p.sx+Math.cos(a)*rad,p.sy+Math.sin(a)*rad):ctx.lineTo(p.sx+Math.cos(a)*rad,p.sy+Math.sin(a)*rad);}ctx.closePath();}
+    else if(loc.type==='viet'){ctx.moveTo(p.sx,p.sy-r*1.3);ctx.lineTo(p.sx+r*1.1,p.sy+r*0.9);ctx.lineTo(p.sx-r*1.1,p.sy+r*0.9);ctx.closePath();}
+    else if(loc.type==='airport')ctx.rect(p.sx-r*2,p.sy-r*0.6,r*4,r*1.2);
+    else if(loc.type==='village')ctx.arc(p.sx,p.sy,r*0.7,0,Math.PI*2);
+    else ctx.arc(p.sx,p.sy,r,0,Math.PI*2);
+    ctx.fillStyle=isDefeated&&loc.id!=='HQ'?'#6b7280':(loc.id===hovered?'#fbbf24':loc.color);ctx.fill();
+    ctx.strokeStyle=isDefeated?'rgba(150,150,150,0.5)':'rgba(255,255,255,0.7)';ctx.lineWidth=0.8;ctx.stroke();
+    if(loc.id==='HQ'&&!isDefeated){ctx.beginPath();ctx.arc(p.sx,p.sy,r+4+pm*1.5,0,Math.PI*2);ctx.strokeStyle='rgba(229,62,62,0.4)';ctx.lineWidth=1.5;ctx.stroke();}
+    if(phase===3&&loc.id==='HQ'){
+      const fh=Math.max(12,18*p.d*0.5+8);
+      ctx.fillStyle='rgba(220,38,38,0.95)';ctx.fillRect(p.sx,p.sy-r-fh,fh*0.65,fh*0.45);
+      ctx.fillStyle='#fde047';ctx.font=`${Math.max(5,7*p.d*0.3+3)}px Arial`;ctx.fillText('★',p.sx+fh*0.12,p.sy-r-fh+fh*0.32);
+      ctx.strokeStyle='rgba(255,255,100,0.8)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(p.sx,p.sy-r);ctx.lineTo(p.sx,p.sy-r-fh);ctx.stroke();
+    }
+    const ls=Math.max(8,10*p.d*0.35+6);
+    ctx.font=`bold ${ls}px Arial`;ctx.textAlign='center';
+    const tw=ctx.measureText(loc.id).width;
+    ctx.fillStyle='rgba(0,0,0,0.65)';
+    if(ctx.roundRect)ctx.beginPath(),ctx.roundRect(p.sx-tw/2-3,p.sy+r+2,tw+6,ls+4,3),ctx.fill();
+    ctx.fillStyle=isDefeated?'#9ca3af':'#fff';ctx.fillText(loc.id,p.sx,p.sy+r+ls+2);
+    projPos.push({...loc,sx:p.sx,sy:p.sy,r:r+8});
+  });
+}
+
+function drawSectorLabels(){
+  [{text:'CAO ĐIỂM PHÍA ĐÔNG',x:7.5,z:0,s:10},{text:'CHỈ HUY PHÁP',x:-2,z:0.5,s:9},{text:'THUNG LŨNG MƯỜNG THANH',x:-0.5,z:-1,s:11}]
+  .forEach(l=>{const p=proj(l.x,-1.6,l.z);ctx.font=`bold ${Math.max(7,l.s*p.d*0.5+4)}px Arial`;ctx.fillStyle='rgba(255,255,200,0.5)';ctx.textAlign='center';ctx.fillText(l.text,p.sx,p.sy);});
+}
+
+function drawMap(){
+  const W=canvas.width/devicePixelRatio,H=canvas.height/devicePixelRatio;
+  ctx.save();ctx.scale(devicePixelRatio,devicePixelRatio);ctx.clearRect(0,0,W,H);
+  const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#050f1e');sky.addColorStop(1,'#0d2040');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,255,255,0.18)';for(let i=0;i<40;i++)ctx.fillRect((i*173+50)%W,(i*113+30)%(H*0.38),1,1);
+  drawTerrain();drawRiver();drawRoad();drawAirports();drawRings();drawTrenches();drawRoutes();drawPositions();drawSectorLabels();
+  ctx.restore();
+}
+
+function loop(){pulseT+=0.04;arrowT+=0.015;drawMap();drawFX();requestAnimationFrame(loop);}
+loop();
+
+// ── Input ──
+document.body.addEventListener('mousedown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;initAudio();});
+window.addEventListener('mouseup',()=>drag=false);
+window.addEventListener('mousemove',e=>{
+  if(drag){rotY+=(e.clientX-lastX)*0.008;rotX+=(e.clientY-lastY)*0.006;rotX=Math.max(-0.2,Math.min(1.3,rotX));lastX=e.clientX;lastY=e.clientY;}
+  const rect=canvas.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  let hit=null;for(const p of projPos){const dx=p.sx-mx,dy=p.sy-my;if(Math.sqrt(dx*dx+dy*dy)<p.r+4){hit=p;break;}}
+  hovered=hit?hit.id:null;
+  document.getElementById('info-title').textContent=hit?hit.name:'Di chuột để xem thông tin';
+  document.getElementById('info-desc').textContent=hit?hit.desc:'Hover vào các điểm để xem chi tiết lịch sử.';
+  document.body.style.cursor=hit?'pointer':(drag?'grabbing':'grab');
+});
+document.body.addEventListener('touchstart',e=>{drag=true;lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;initAudio();},{passive:true});
+window.addEventListener('touchend',()=>drag=false);
+window.addEventListener('touchmove',e=>{if(!drag)return;rotY+=(e.touches[0].clientX-lastX)*0.008;rotX+=(e.touches[0].clientY-lastY)*0.006;rotX=Math.max(-0.2,Math.min(1.3,rotX));lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;},{passive:true});
+document.body.addEventListener('wheel',e=>{e.preventDefault();scale*=e.deltaY>0?0.92:1.08;scale=Math.max(0.35,Math.min(3,scale));},{passive:false});
+document.getElementById('btn-left').onclick=()=>rotY-=0.18;
+document.getElementById('btn-right').onclick=()=>rotY+=0.18;
+document.getElementById('btn-up').onclick=()=>{rotX=Math.max(-0.2,rotX-0.1);};
+document.getElementById('btn-down').onclick=()=>{rotX=Math.min(1.3,rotX+0.1);};
+document.getElementById('btn-reset').onclick=()=>{rotX=0.52;rotY=0.18;scale=1.0;};
+
+// Auto-rotate demo
+let ar=0;const ari=setInterval(()=>{rotY+=0.012;if(++ar>200)clearInterval(ari);},40);
+
+function setPhase(p){
+  phase=p;
+  document.querySelectorAll('.phase-btn').forEach((b,i)=>b.classList.toggle('active',i===p));
+  const toast=document.getElementById('phase-toast');
+  toast.textContent=['🗺 Toàn cảnh chiến trường','⚔ Đợt 1 (13/3–17/3): Xóa bỏ Phân khu Bắc','⚔ Đợt 2 (30/3–30/4): Đánh chiếm điểm cao Đông','🚩 Đợt 3 (1/5–7/5): Toàn thắng!'][p];
+  toast.style.display='block';setTimeout(()=>toast.style.display='none',2800);
+  // Sound FX on phase switch
+  initAudio();
+  if(p===1){setTimeout(()=>{playCannon(0.7);playGunfire(6,90);},300);}
+  if(p===2){setTimeout(()=>{playCannon(0.55);playGunfire(4,110);},300);}
+  if(p===3){setTimeout(()=>{playExplosion(0.9);triggerExplosions(4);setTimeout(()=>playVictory(),2500);},400);}
+  // Restart narration if active
+  if(narrateOn) startNarration(p);
+}
+window.setPhase=setPhase;
+</script>
+</body>
+</html>
