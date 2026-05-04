@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chiến dịch Điện Biên Phủ 1954 – 3D + Âm thanh</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <canvas id="fx-canvas"></canvas>
+
+  <div id="ui">
+    <div id="title-bar">
+      <h1>⚑ CHIẾN DỊCH ĐIỆN BIÊN PHỦ 1954</h1>
+      <p>Mô hình 3D Tương tác · Âm thanh trận địa · Giọng kể lịch sử</p>
+    </div>
+
+    <div id="phase-panel">
+      <button class="phase-btn p0 active" onclick="setPhase(0)">🗺 Toàn cảnh chiến trường<span>Địa hình & vị trí tổng quát</span></button>
+      <button class="phase-btn p1" onclick="setPhase(1)">⚔ Đợt 1: 13/3 – 17/3/1954<span>Xóa bỏ Phân khu Bắc · Him Lam, Độc Lập</span></button>
+      <button class="phase-btn p2" onclick="setPhase(2)">⚔ Đợt 2: 30/3 – 30/4/1954<span>Đánh chiếm điểm cao phía Đông</span></button>
+      <button class="phase-btn p3" onclick="setPhase(3)">⚔ Đợt 3: 1/5 – 7/5/1954<span>Tổng công kích · Toàn thắng !</span></button>
+    </div>
+
+    <div id="sound-panel">
+      <button class="sbtn" id="btn-ambient" onclick="toggleAmbient()">🔇 Âm thanh nền</button>
+      <button class="sbtn" id="btn-narrate" onclick="toggleNarrate()">🎙 Giọng kể chuyện</button>
+      <button class="sbtn" id="btn-cannon" onclick="fireCannon()">💥 Pháo kích</button>
+      <div id="vol-wrap">🔊<input type="range" id="vol" min="0" max="1" step="0.05" value="0.6" oninput="setVol(this.value)"> Âm lượng</div>
+    </div>
+
+    <div id="narrator">
+      <div id="narrator-phase">GIỌNG KỂ</div>
+      <div id="narrator-text"></div>
+      <div id="narrator-progress">
+        <div id="narrator-bar"></div>
+      </div>
+    </div>
+
+    <div id="legend">
+      <h3>Chú giải</h3>
+      <div class="leg"><div class="lc" style="background:#e53e3e"></div> Sở chỉ huy địch</div>
+      <div class="leg"><div class="lc" style="background:#dd6b20"></div> Cứ điểm địch</div>
+      <div class="leg"><div class="lc" style="background:#3b82f6"></div> Vị trí quân ta</div>
+      <div class="leg"><div class="ls" style="background:#f6e05e"></div> Đợt 1 – tiến công</div>
+      <div class="leg"><div class="ls" style="background:#fb923c"></div> Đợt 2 – tiến công</div>
+      <div class="leg"><div class="ls" style="background:#ef4444"></div> Đợt 3 – tiến công</div>
+      <div class="leg"><div class="ls" style="background:#a855f7"></div> Giao thông hào</div>
+      <div class="leg"><div class="ls" style="background:#60a5fa"></div> Sông Nậm Rốm</div>
+    </div>
+
+    <div id="rot-btns">
+      <div class="empty"></div>
+      <button class="rb" id="btn-up">▲</button>
+      <div class="empty"></div>
+      <button class="rb" id="btn-left">◁</button>
+      <button class="rb" id="btn-reset" title="Reset">⌂</button>
+      <button class="rb" id="btn-right">▷</button>
+      <div class="empty"></div>
+      <button class="rb" id="btn-down">▼</button>
+      <div class="empty"></div>
+    </div>
+
+    <div id="info">
+      <h3 id="info-title">Di chuột để xem thông tin</h3>
+      <p id="info-desc">Hover vào các điểm để xem chi tiết lịch sử.</p>
+    </div>
+
+    <div id="phase-toast"></div>
+    <div id="hint">🖱 Kéo xoay 360° · Scroll zoom · Nhấn 🎙 để nghe kể chuyện</div>
+  </div>
+
+  <!-- Core modules -->
+  <script src="js/config/constants.js"></script>
+  <script src="js/data/locations.js"></script>
+  <script src="js/data/routes.js"></script>
+  <script src="js/data/narrations.js"></script>
+  
+  <!-- Engine modules -->
+  <script src="js/engine/canvas.js"></script>
+  <script src="js/engine/projection.js"></script>
+  <script src="js/engine/terrain.js"></script>
+  
+  <!-- Audio modules -->
+  <script src="js/audio/audioEngine.js"></script>
+  <script src="js/audio/narrator.js"></script>
+  
+  <!-- Visual modules -->
+  <script src="js/visual/particles.js"></script>
+  <script src="js/visual/renderer.js"></script>
+  
+  <!-- Control modules -->
+  <script src="js/controls/input.js"></script>
+  <script src="js/controls/ui.js"></script>
+  
+  <!-- Main app -->
+  <script src="js/app.js"></script>
+</body>
+</html>
